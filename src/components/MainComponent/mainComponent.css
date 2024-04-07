@@ -1,0 +1,23 @@
+.wrapper1 {
+  display: flex;
+  justify-content: space-between;
+}
+
+.wrapper2 {
+  display: flex;
+  justify-content: space-around;
+}
+
+.submit-btn {
+  display: block;
+  margin-top: 10px;
+}
+
+label {
+  display: block;
+}
+
+.form {
+  border: 1px solid black;
+  padding: 30px;
+}
