@@ -1,14 +1,16 @@
-import axios from 'axios';
 import React, { useState } from 'react';
+
+import axios from 'axios';
+
 import './mainComponent.css';
 
 export const MainComponent = () => {
-  const [username1, setUsername1] = useState('');
-  const [username2, setUsername2] = useState('');
-  const [user1Data, setUser1Data] = useState(null);
-  const [user2Data, setUser2Data] = useState(null);
-  const [error1, setError1] = useState(false);
-  const [error2, setError2] = useState(false);
+  const [usernameOne, setUsernameOne] = useState('');
+  const [usernameTwo, setUsernameTwo] = useState('');
+  const [userOneData, setUserOneData] = useState(null);
+  const [userTwoData, setUserTwoData] = useState(null);
+  const [errorOne, setErrorOne] = useState(false);
+  const [errorTwo, setErrorTwo] = useState(false);
   const [battleStarted, setBattleStarted] = useState(false);
   const [battleResult, setBattleResult] = useState('');
 
@@ -25,19 +27,19 @@ export const MainComponent = () => {
 
   const handleBattle = async () => {
     setBattleStarted(true);
-    await fetchData(username1, setUser1Data, setError1);
-    await fetchData(username2, setUser2Data, setError2);
+    await fetchData(usernameOne, setUserOneData, setErrorOne);
+    await fetchData(usernameTwo, setUserTwoData, setErrorTwo);
     calculateBattleResult();
   };
 
   const calculateBattleResult = () => {
-    if (user1Data && user2Data) {
-      const user1Score = user1Data.followers + user1Data.public_repos;
-      const user2Score = user2Data.followers + user2Data.public_repos;
-      if (user1Score > user2Score) {
-        setBattleResult(user1Data.login);
-      } else if (user1Score < user2Score) {
-        setBattleResult(user2Data.login);
+    if (userOneData && userTwoData) {
+      const userOneScore = userOneData.followers + userOneData.public_repos;
+      const userTwoScore = userTwoData.followers + userTwoData.public_repos;
+      if (userOneScore > userTwoScore) {
+        setBattleResult(userOneData.login);
+      } else if (userOneScore < userTwoScore) {
+        setBattleResult(userTwoData.login);
       } else {
         setBattleResult("It's a tie!");
       }
@@ -45,21 +47,21 @@ export const MainComponent = () => {
   };
 
   const handleRestart = () => {
-    setUsername1('');
-    setUsername2('');
-    setUser1Data(null);
-    setUser2Data(null);
-    setError1(false);
-    setError2(false);
+    setUsernameOne('');
+    setUsernameTwo('');
+    setUserOneData(null);
+    setUserTwoData(null);
+    setErrorOne(false);
+    setErrorTwo(false);
     setBattleStarted(false);
     setBattleResult('');
   };
 
   const handleReset = () => {
-    setUser1Data(null);
-    setUser2Data(null);
-    setError1(false);
-    setError2(false);
+    setUserOneData(null);
+    setUserTwoData(null);
+    setErrorOne(false);
+    setErrorTwo(false);
   };
 
   const renderUserData = (userData, error, isWinner) => {
@@ -94,30 +96,30 @@ export const MainComponent = () => {
     <>
       <h1>Let's Get Ready to Rumble</h1>
       <div className="wrapper1">
-        {!user1Data && (
+        {!userOneData && (
           <div className="form">
             <label>Choose Player 1 username:</label>
             <input
               type="text"
-              value={username1}
-              onChange={(e) => setUsername1(e.target.value)}
+              value={usernameOne}
+              onChange={(e) => setUsernameOne(e.target.value)}
               placeholder="Enter username"
             />
-            <button className="submit-btn" onClick={() => fetchData(username1, setUser1Data, setError1)}>
+            <button className="submit-btn" onClick={() => fetchData(usernameOne, setUserOneData, setErrorOne)}>
               Submit
             </button>
           </div>
         )}
-        {!user2Data && (
+        {!userTwoData && (
           <div className="form">
             <label>Choose Player 2 username:</label>
             <input
               type="text"
-              value={username2}
-              onChange={(e) => setUsername2(e.target.value)}
+              value={usernameTwo}
+              onChange={(e) => setUsernameTwo(e.target.value)}
               placeholder="Enter username"
             />
-            <button className="submit-btn" onClick={() => fetchData(username2, setUser2Data, setError2)}>
+            <button className="submit-btn" onClick={() => fetchData(usernameTwo, setUserTwoData, setErrorTwo)}>
               Submit
             </button>
           </div>
@@ -125,12 +127,12 @@ export const MainComponent = () => {
       </div>
 
       <div className="userData">
-        {user1Data && renderUserData(user1Data, error1, user1Data.login === battleResult)}
-        {user2Data && renderUserData(user2Data, error2, user2Data.login === battleResult)}
+        {userOneData && renderUserData(userOneData, errorOne, userOneData.login === battleResult)}
+        {userTwoData && renderUserData(userTwoData, errorTwo, userTwoData.login === battleResult)}
       </div>
 
       <div className="wrapper2">
-        {user1Data && user2Data && !battleStarted && <button onClick={handleBattle}>Battle!</button>}
+        {userOneData && userTwoData && !battleStarted && <button onClick={handleBattle}>Battle!</button>}
         {battleStarted && <button onClick={handleRestart}>Restart</button>}
       </div>
     </>
