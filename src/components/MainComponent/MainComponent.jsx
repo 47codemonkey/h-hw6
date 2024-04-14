@@ -1,7 +1,5 @@
-import React, { useState } from 'react';
-
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-
 import './mainComponent.css';
 
 export const MainComponent = () => {
@@ -13,6 +11,31 @@ export const MainComponent = () => {
   const [errorTwo, setErrorTwo] = useState(false);
   const [battleStarted, setBattleStarted] = useState(false);
   const [battleResult, setBattleResult] = useState('');
+
+  useEffect(() => {
+    const renderWinnerLabel = (user, isWinner) => {
+      if (user && isWinner) {
+        return <p className="winnerInfo">Winner</p>;
+      } else if (user && !isWinner && battleStarted && battleResult !== "It's a tie!") {
+        return <p className="loserInfo">Loser</p>;
+      }
+      return null;
+    };
+
+    setUserOneData((prevState) => {
+      if (prevState) {
+        return { ...prevState, winnerLabel: renderWinnerLabel(prevState, prevState.login === battleResult) };
+      }
+      return prevState;
+    });
+
+    setUserTwoData((prevState) => {
+      if (prevState) {
+        return { ...prevState, winnerLabel: renderWinnerLabel(prevState, prevState.login === battleResult) };
+      }
+      return prevState;
+    });
+  }, [battleResult, battleStarted]);
 
   const fetchData = async (username, setUser, setError) => {
     try {
@@ -27,9 +50,23 @@ export const MainComponent = () => {
 
   const handleBattle = async () => {
     setBattleStarted(true);
-    await fetchData(usernameOne, setUserOneData, setErrorOne);
-    await fetchData(usernameTwo, setUserTwoData, setErrorTwo);
-    calculateBattleResult();
+    try {
+      const [userOneResponse, userTwoResponse] = await Promise.all([
+        axios.get(`https://api.github.com/users/${usernameOne}`),
+        axios.get(`https://api.github.com/users/${usernameTwo}`),
+      ]);
+
+      setUserOneData(userOneResponse.data);
+      setUserTwoData(userTwoResponse.data);
+      setErrorOne(false);
+      setErrorTwo(false);
+
+      calculateBattleResult();
+    } catch (error) {
+      console.error(error);
+      setErrorOne(true);
+      setErrorTwo(true);
+    }
   };
 
   const calculateBattleResult = () => {
@@ -64,17 +101,16 @@ export const MainComponent = () => {
     setErrorTwo(false);
   };
 
-  const renderUserData = (userData, error, isWinner) => {
+  const renderUserData = (userData, error) => {
     if (error) {
       return <p>Username not exist</p>;
     }
     if (userData) {
       return (
-        <div className="wrapper4">
+        <form className="wrapper4" onSubmit={(e) => e.preventDefault()}>
           <div className="wrapper3">
-            {isWinner && <p className="winnerInfo">WINNER</p>}
+            {userData.winnerLabel}
             {battleResult === "It's a tie!" && <p className="tieInfo">It's a tie!</p>}
-            {!isWinner && battleStarted && battleResult !== "It's a tie!" && <p className="loserInfo">LOSER</p>}
             <img width="250px" height="250px" src={userData.avatar_url} alt={userData.login} />
             <p>{userData.login}</p>
             {battleStarted && (
@@ -85,8 +121,12 @@ export const MainComponent = () => {
               </>
             )}
           </div>
-          {!battleStarted && <button onClick={handleReset}>Reset</button>}
-        </div>
+          {!battleStarted && (
+            <button type="button" onClick={handleReset}>
+              Reset
+            </button>
+          )}
+        </form>
       );
     }
     return null;
@@ -97,43 +137,65 @@ export const MainComponent = () => {
       <h1>Let's Get Ready to Rumble</h1>
       <div className="wrapper1">
         {!userOneData && (
-          <div className="form">
+          <form
+            className="form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              fetchData(usernameOne, setUserOneData, setErrorOne);
+            }}
+          >
             <label>Choose Player 1 username:</label>
             <input
               type="text"
               value={usernameOne}
               onChange={(e) => setUsernameOne(e.target.value)}
               placeholder="Enter username"
+              required
             />
-            <button className="submit-btn" onClick={() => fetchData(usernameOne, setUserOneData, setErrorOne)}>
+            <button className="submit-btn" type="submit">
               Submit
             </button>
-          </div>
+          </form>
         )}
         {!userTwoData && (
-          <div className="form">
+          <form
+            className="form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              fetchData(usernameTwo, setUserTwoData, setErrorTwo);
+            }}
+          >
             <label>Choose Player 2 username:</label>
             <input
               type="text"
               value={usernameTwo}
               onChange={(e) => setUsernameTwo(e.target.value)}
               placeholder="Enter username"
+              required
             />
-            <button className="submit-btn" onClick={() => fetchData(usernameTwo, setUserTwoData, setErrorTwo)}>
+            <button className="submit-btn" type="submit">
               Submit
             </button>
-          </div>
+          </form>
         )}
       </div>
 
       <div className="userData">
-        {userOneData && renderUserData(userOneData, errorOne, userOneData.login === battleResult)}
-        {userTwoData && renderUserData(userTwoData, errorTwo, userTwoData.login === battleResult)}
+        {userOneData && renderUserData(userOneData, errorOne)}
+        {userTwoData && renderUserData(userTwoData, errorTwo)}
       </div>
 
       <div className="wrapper2">
-        {userOneData && userTwoData && !battleStarted && <button onClick={handleBattle}>Battle!</button>}
-        {battleStarted && <button onClick={handleRestart}>Restart</button>}
+        {userOneData && userTwoData && !battleStarted && (
+          <button type="button" onClick={handleBattle}>
+            Battle!
+          </button>
+        )}
+        {battleStarted && (
+          <button type="button" onClick={handleRestart}>
+            Restart
+          </button>
+        )}
       </div>
     </>
   );
